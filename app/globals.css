@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+html,
+body,
+:root {
+  hieght: 100%;
+  background: #343434;
+}
+
 .hidden-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

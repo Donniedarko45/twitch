@@ -1,5 +1,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
+import { dark } from "@clerk/themes";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export default function RootLayout({
   children,
@@ -7,9 +9,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body>{children}</body>
+    <ClerkProvider appearance={{ baseTheme: dark }}>
+      <html lang="en" suppressHydrationWarning>
+        <body>
+          <ThemeProvider
+            attribute="class"
+            forcedTheme="dark"
+            storageKey="gamehub-theme"
+          >
+            {children}
+          </ThemeProvider>
+        </body>
       </html>
     </ClerkProvider>
   );
