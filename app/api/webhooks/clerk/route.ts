@@ -1,7 +1,6 @@
-import { verifyWebhook } from "@clerk/nextjs/webhooks";
+import { verifyWebhook, WebhookEvent } from "@clerk/nextjs/webhooks";
 import { NextRequest } from "next/server";
 import { headers } from "next/headers";
-import { Webhook } from "svix";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,7 +8,7 @@ export async function POST(req: NextRequest) {
     if (!WEBHOOK_SECRET) {
       throw new Error("please add clerk webhook secret from clerk dashboard ");
     }
-    const evt = await verifyWebhook(req);
+    const evt: WebhookEvent = await verifyWebhook(req);
 
     // Do something with payload
     //
@@ -22,14 +21,6 @@ export async function POST(req: NextRequest) {
     if (!svix_id || !svix_timestamp || !svix_signature) {
       return new Response("Missing svix headers", { status: 400 });
     }
-
-    const payload = await req.json();
-    const body = JSON.stringify(payload);
-    const wh = new Webhook(WEBHOOK_SECRET);
-    wh.verify(body, {
-      "svix-id": svix_id,
-      "svix-timestamp": svix_timestamp,
-    });
 
     // For this guide, log payload to console
     const { id } = evt.data;
