@@ -1,38 +1,65 @@
 import { verifyWebhook, WebhookEvent } from "@clerk/nextjs/webhooks";
 import { NextRequest } from "next/server";
 import { headers } from "next/headers";
+import { db } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
     const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
     if (!WEBHOOK_SECRET) {
-      throw new Error("please add clerk webhook secret from clerk dashboard ");
+      throw new Error("Please add CLERK_WEBHOOK_SECRET from Clerk dashboard");
     }
-    const evt: WebhookEvent = await verifyWebhook(req);
 
-    // Do something with payload
-    //
-    // getting the headers
-    const headerPayload = await headers();
-    const svix_id = headerPayload.get("svix-id");
-    const svix_timestamp = headerPayload.get("svix-timestamp");
-    const svix_signature = headerPayload.get("svix-signature");
+    // Get the headers
+    const headersList = await headers();
+    const svix_id = headersList.get("svix-id");
+    const svix_timestamp = headersList.get("svix-timestamp");
+    const svix_signature = headersList.get("svix-signature");
 
     if (!svix_id || !svix_timestamp || !svix_signature) {
+      console.error("Missing svix headers:", { svix_id, svix_timestamp, svix_signature });
       return new Response("Missing svix headers", { status: 400 });
     }
 
-    // For this guide, log payload to console
-    const { id } = evt.data;
+    // Verify the webhook first
+    const evt: WebhookEvent = await verifyWebhook(req);
     const eventType = evt.type;
-    console.log(
-      `Received webhook with ID ${id} and event type of ${eventType}`,
-    );
-    console.log("Webhook payload:", evt.data);
+
+    console.log("Received webhook event:", eventType, evt.data);
+
+    if (eventType === "user.created") {
+      // Type assertion since we know it's a user event
+      const userData = evt.data as {
+        id: string;
+        username: string | null;
+        image_url: string;
+      };
+
+      const username = userData.username || userData.id;
+
+      console.log("Creating user in database:", {
+        id: userData.id,
+        username,
+        imageUrl: userData.image_url,
+      });
+
+      const user = await db.user.create({
+        data: {
+          externalUserId: userData.id,
+          username,
+          imageUrl: userData.image_url,
+        },
+      });
+
+      console.log("Successfully created user:", user);
+    }
 
     return new Response("Webhook received", { status: 200 });
   } catch (err) {
-    console.error("Error verifying webhook:", err);
-    return new Response("Error verifying webhook", { status: 400 });
+    console.error("Error processing webhook:", err);
+    return new Response(
+      `Webhook error: ${err instanceof Error ? err.message : "Unknown error"}`,
+      { status: 500 }
+    );
   }
 }
