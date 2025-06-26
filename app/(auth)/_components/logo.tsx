@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Poppins } from "next/font/google";
-
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const font = Poppins({
@@ -10,23 +10,33 @@ const font = Poppins({
 
 export const Logo = () => {
   return (
-    <div className="flex flex-col items-center gap-y-1">
-      <div className="bg-dark rounded-full p-1">
-        <Image src="/spooky.svg" alt="mee" height="80" width="75" />
+    <Link href="/">
+      <div className="hidded lg:flex items-center gap-x-4 hover:opacity-75 transisition">
+        <div className=" rounded-full p-1">
+          <Image src="./spooky.svg" alt="Twitch" height="40" width="32" />
+        </div>
+        <div className={cn(font.className)}>
+          <p className="text-shadow-md text-xl">Twitch</p>
+          <p className="text-lg text-amber-100 ">Let's Play</p>
+        </div>
       </div>
-      <div className="flex flex-col items-center">
-        <p
-          className={cn(
-            "text-xl font-semibold text-muted-foreground",
-            font.className,
-          )}
-        >
-          Twitch
-        </p>
-        <p className={cn("text-sm text-muted-foreground", font.className)}>
-          Let's Play
-        </p>
+    </Link>
+  );
+};
+
+
+export const TwitchLogo = () => {
+  return (
+    <Link href="/">
+      <div className="hidded lg:flex items-center gap-x-4 hover:opacity-75 transisition">
+        <div className=" rounded-full p-1">
+          <Image src="./icons8-twitch.svg" alt="Twitch" height="40" width="32" />
+        </div>
+        <div className={cn(font.className)}>
+          <p className="text-shadow-md text-xl">Twitch</p>
+          <p className="text-lg text-amber-100 ">Let's Play</p>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 };

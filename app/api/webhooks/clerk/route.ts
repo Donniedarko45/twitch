@@ -2,6 +2,7 @@ import { verifyWebhook, WebhookEvent } from "@clerk/nextjs/webhooks";
 import { NextRequest } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
+import { use } from "react";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +18,11 @@ export async function POST(req: NextRequest) {
     const svix_signature = headersList.get("svix-signature");
 
     if (!svix_id || !svix_timestamp || !svix_signature) {
-      console.error("Missing svix headers:", { svix_id, svix_timestamp, svix_signature });
+      console.error("Missing svix headers:", {
+        svix_id,
+        svix_timestamp,
+        svix_signature,
+      });
       return new Response("Missing svix headers", { status: 400 });
     }
 
@@ -54,12 +59,51 @@ export async function POST(req: NextRequest) {
       console.log("Successfully created user:", user);
     }
 
+    if (eventType === "user.created") {
+      const userData = evt.data as {
+        id: string;
+        username: string;
+        image_url: string;
+      };
+
+      const currentUser = await db.user.findUnique({
+        where: {
+          externalUserId: userData.id,
+        },
+      });
+      if (!currentUser) {
+        return new Response("User not found", { status: 404 });
+      }
+
+      await db.user.update({
+        where: {
+          externalUserId: userData.id,
+        },
+        data: {
+          username: userData.username,
+          imageUrl: userData.image_url,
+        },
+      });
+    }
+
+    if (eventType === "user.deleted") {
+      const userData = evt.data as {
+        id: string;
+      };
+
+      await db.user.delete({
+        where: {
+          externalUserId: userData.id,
+        },
+      });
+    }
+
     return new Response("Webhook received", { status: 200 });
   } catch (err) {
     console.error("Error processing webhook:", err);
     return new Response(
       `Webhook error: ${err instanceof Error ? err.message : "Unknown error"}`,
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
