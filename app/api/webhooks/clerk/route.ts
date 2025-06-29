@@ -26,7 +26,6 @@ export async function POST(req: NextRequest) {
       return new Response("Missing svix headers", { status: 400 });
     }
 
-    // Verify the webhook first
     const evt: WebhookEvent = await verifyWebhook(req);
     const eventType = evt.type;
 
